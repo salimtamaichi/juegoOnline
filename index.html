@@ -42,7 +42,8 @@
   <div id="connectedUsers"></div>
   <hr>
   <div class="mb-3">
-    <input type="text" id="message" class="form-control" placeholder="Type your message" onkeypress="handleKeyPress(event)">
+    <input type="text" id="message" class="form-control" placeholder="Type your message"
+      onkeypress="handleKeyPress(event)">
   </div>
   <button onclick="sendMessage()" class="btn btn-primary">Send</button>
   <hr>
@@ -72,6 +73,20 @@
           break;
         case 'connectedUsers':
           displayConnectedUsers(data.users);
+          break;
+        case 'gameRequest':
+          // handleGameRequest(data.from);
+          // alert(data.from);
+          if (confirm(data.from)){
+            console.log('aaaaaaaaaaaa', data.from);
+            acceptGameRequest(data.from);
+          }
+          break;
+        case 'acceptGameRequest':
+          alert(`${data.from} ha aceptado la invitación`);
+          break;
+        case 'game_data':
+          console.log(data);
           break;
       }
     };
@@ -135,6 +150,8 @@
       users.forEach(user => {
         const li = document.createElement('li');
         li.textContent = user;
+        // Agregar un evento de clic a cada nombre de usuario
+        li.addEventListener('click', () => sendGameRequest(user));
         ul.appendChild(li);
       });
 
@@ -150,6 +167,14 @@
       if (event.key === 'Enter') {
         sendMessage();
       }
+    }
+
+    function sendGameRequest(user) {
+      socket.send(JSON.stringify({ type: 'gameRequest', destinatario: user }));
+    }
+
+    function acceptGameRequest(user) {
+      socket.send(JSON.stringify({ type: 'acceptGameRequest', destinatario: user }));
     }
   </script>
 </body>
