@@ -243,16 +243,72 @@ function handleTurn(ws, data) {
         if (foundGame.player1 == ws.nickname) {
           ficha = 'X';
         } else {
-          ficha = 'O'
+          ficha = 'O';
         }
         foundGame.turn = foundGame.turn === foundGame.player1 ? foundGame.player2 : foundGame.player1;
         foundGame.table[data.row][data.column] = ficha;
         console.log(foundGame);
         sendGame(data.player1, data.player2);
+        const connection1 = findUserConnection(data.player1);
+        const connection2 = findUserConnection(data.player2);
+        // Verificar victoria
+        if (verificarVictoria(foundGame.table, ficha)) {
+          const data = {
+            type: 'finnished',
+            message: 'Ha ganado el jugador ' + ws.nickname
+          };
+          connection1.send(JSON.stringify(data));
+          connection2.send(JSON.stringify(data));
+          // Eliminar el juego del array
+          games.splice(games.indexOf(foundGame), 1);
+        } else if (verificarEmpate(foundGame.table)) {
+          const data = {
+            type: 'finnished',
+            message: 'Habeis empatado!'
+          };
+          connection1.send(JSON.stringify(data));
+          connection2.send(JSON.stringify(data));
+          // Eliminar el juego del array
+          games.splice(games.indexOf(foundGame), 1);
+        }
       }
     }
   }
 }
+
+
+function verificarVictoria(tablero, ficha) {
+  // Verificar líneas horizontales
+  for (let i = 0; i < 3; i++) {
+    if (tablero[i][0] === ficha && tablero[i][1] === ficha && tablero[i][2] === ficha) {
+      return true;
+    }
+  }
+  // Verificar líneas verticales
+  for (let j = 0; j < 3; j++) {
+    if (tablero[0][j] === ficha && tablero[1][j] === ficha && tablero[2][j] === ficha) {
+      return true;
+    }
+  }
+  // Verificar diagonales
+  if ((tablero[0][0] === ficha && tablero[1][1] === ficha && tablero[2][2] === ficha) ||
+    (tablero[0][2] === ficha && tablero[1][1] === ficha && tablero[2][0] === ficha)) {
+    return true;
+  }
+  return false;
+}
+
+function verificarEmpate(tablero) {
+  for (let i = 0; i < tablero.length; i++) {
+    for (let j = 0; j < tablero[i].length; j++) {
+      if (tablero[i][j] === ' ') {
+        return false; // Todavía hay casillas vacías, no es un empate
+      }
+    }
+  }
+  return true; // Todas las casillas están ocupadas, hay un empate
+}
+
 
 server.listen(3000, () => {
   console.log('Servidor en marcha en http://localhost:3000');
