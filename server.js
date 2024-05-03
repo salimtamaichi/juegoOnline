@@ -49,6 +49,9 @@ wss.on('connection', (ws) => {
         acceptGameRequest(ws, data);
         createGame(ws.nickname, data.destinatario);
         break;
+      case 'handleTurn':
+        handleTurn(ws, data);
+        break;
     }
   });
 
@@ -205,13 +208,13 @@ function createGame(user1, user2) {
   sendGame(user1, user2);
 }
 
-function sendGame(player1, player2){
+function sendGame(player1, player2) {
   const game = buscarJuego(player1, player2);
-  if(game){
+  if (game) {
     const connection1 = findUserConnection(player1);
     const connection2 = findUserConnection(player2);
 
-    if(connection1 && connection2){
+    if (connection1 && connection2) {
       const gameData = {
         type: 'game_data',
         game: game
@@ -223,10 +226,32 @@ function sendGame(player1, player2){
 }
 
 function buscarJuego(user1, user2) {
-  return games.find(game => 
+  return games.find(game =>
     (game.player1 === user1 && game.player2 === user2) ||
     (game.player1 === user2 && game.player2 === user1)
   );
+}
+
+function handleTurn(ws, data) {
+  let foundGame = buscarJuego(data.player1, data.player2);
+
+  if (foundGame) {
+    if (foundGame.turn == ws.nickname) {
+      if (foundGame.table[data.row][data.column] == ' ') {
+        let ficha;
+        console.log(foundGame.player1, ws.nickname);
+        if (foundGame.player1 == ws.nickname) {
+          ficha = 'X';
+        } else {
+          ficha = 'O'
+        }
+        foundGame.turn = foundGame.turn === foundGame.player1 ? foundGame.player2 : foundGame.player1;
+        foundGame.table[data.row][data.column] = ficha;
+        console.log(foundGame);
+        sendGame(data.player1, data.player2);
+      }
+    }
+  }
 }
 
 server.listen(3000, () => {
