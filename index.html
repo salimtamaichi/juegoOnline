@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WebSocket Client</title>
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
   <style>
     #messages {
       overflow-y: scroll;
@@ -14,6 +14,7 @@
     }
 
     .tablero {
+      margin-top: 30px;
       display: grid;
       grid-template-columns: repeat(3, 100px);
       grid-template-rows: repeat(3, 100px);
@@ -35,43 +36,69 @@
 </head>
 
 <body class="container py-5">
-  <div class="row">
-    <div class="col-md-6">
-      <h3>Register</h3>
-      <div class="mb-3">
-        <input type="text" id="registerNickname" class="form-control" placeholder="Nick">
+  <section class="hero is-primary">
+    <div class="hero-body">
+      <div class="container">
+        <h1 class="title">
+          Conchat
+        </h1>
       </div>
-      <div class="mb-3">
-        <input type="password" id="registerPassword" class="form-control" placeholder="Password">
-      </div>
-      <button onclick="register()" class="btn btn-primary">Register</button>
     </div>
-    <div class="col-md-6">
-      <h3>Login</h3>
-      <div class="mb-3">
-        <input type="text" id="loginNickname" class="form-control" placeholder="Nick">
+  </section>
+
+  <section class="section">
+    <div class="columns">
+      <div class="column is-one-third">
+        <h3 class="title">Connected Users</h3>
+        <div id="connectedUsers" class="content">
+          <!-- List of connected users will be displayed here -->
+        </div>
       </div>
-      <div class="mb-3">
-        <input type="password" id="loginPassword" class="form-control" placeholder="Password">
+      <div class="column">
+        <div class="row">
+          <h3 class="title">Register</h3>
+          <div class="mb-3">
+            <input type="text" id="registerNickname" class="input" placeholder="Nick">
+          </div>
+          <div class="mb-3">
+            <input type="password" id="registerPassword" class="input" placeholder="Password">
+          </div>
+          <button onclick="register()" class="button is-primary">Register</button>
+        </div>
+        <div class="row">
+          <h3 class="title">Login</h3>
+          <div class="mb-3">
+            <input type="text" id="loginNickname" class="input" placeholder="Nick">
+          </div>
+          <div class="mb-3">
+            <input type="password" id="loginPassword" class="input" placeholder="Password">
+          </div>
+          <button onclick="login()" class="button is-primary">Login</button>
+        </div>
       </div>
-      <button onclick="login()" class="btn btn-primary">Login</button>
     </div>
-  </div>
-  <hr>
-  <div id="connectedUsers"></div>
-  <hr>
-  <div class="mb-3">
-    <input type="text" id="message" class="form-control" placeholder="Type your message"
-      onkeypress="handleKeyPress(event)">
-  </div>
-  <button onclick="sendMessage()" class="btn btn-primary">Send</button>
-  <hr>
-  <div id="messages" class="mb-3"></div>
-  <div id="tablero" class="tablero"></div>
+  </section>
 
+  <hr>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <section class="section">
+    <div class="mb-3">
+      <input type="text" id="message" class="input" placeholder="Type your message" onkeypress="handleKeyPress(event)">
+    </div>
+    <button onclick="sendMessage()" class="button is-primary">Send</button>
+  </section>
+
+  <hr>
+
+  <section class="section">
+    <div id="messages"></div>
+    <div id="tablero" class="tablero"></div>
+  </section>
+
+  <!-- Bulma JS -->
+  <script defer src="https://use.fontawesome.com/releases/v5.14.0/js/all.js"></script>
+
+  <!-- Your Script -->
   <script>
     const socket = new WebSocket('ws://localhost:3000');
 
@@ -86,20 +113,17 @@
           break;
         case 'message':
           displayMessage(data.text);
-          scrollToBottom()
+          scrollToBottom();
           break;
         case 'privateMessage':
           displayMessage(`(Private) ${data.from}: ${data.message}`);
-          scrollToBottom()
+          scrollToBottom();
           break;
         case 'connectedUsers':
           displayConnectedUsers(data.users);
           break;
         case 'gameRequest':
-          // handleGameRequest(data.from);
-          // alert(data.from);
-          if (confirm(data.from)) {
-            console.log('aaaaaaaaaaaa', data.from);
+          if (confirm(data.from + ' te ha enviado una petición de juego.')) {
             acceptGameRequest(data.from);
           }
           break;
@@ -107,9 +131,7 @@
           alert(`${data.from} ha aceptado la invitación`);
           break;
         case 'game_data':
-          console.log(data);
           dibujarTablero(data);
-          console.log(data);
           break;
         case 'finnished':
           alert(data.message);
@@ -131,15 +153,13 @@
 
     function sendMessage() {
       const messageInput = document.getElementById('message');
-      const message = messageInput.value.trim(); // Eliminar espacios en blanco al principio y al final
+      const message = messageInput.value.trim();
 
-      // Verificar si el mensaje está vacío
       if (message === '') {
         alert('Please enter a message before sending.');
-        return; // Detener la función si el mensaje está vacío
+        return;
       }
 
-      // Verificar si el mensaje es un mensaje privado
       if (message.startsWith('/')) {
         const spaceIndex = message.indexOf(' ');
         if (spaceIndex !== -1) {
@@ -151,12 +171,10 @@
           alert('Invalid private message format. Please use /name message.');
         }
       } else {
-        // Si no es un mensaje privado, enviar como un mensaje regular
         const nickname = document.getElementById('loginNickname').value;
         socket.send(JSON.stringify({ type: 'message', nickname, message }));
       }
 
-      // Limpiar el campo de entrada de texto después de enviar el mensaje
       messageInput.value = '';
     }
 
@@ -167,16 +185,14 @@
       messagesDiv.appendChild(p);
     }
 
-    // Función para mostrar la lista de usuarios conectados
     function displayConnectedUsers(users) {
       const connectedUsersDiv = document.getElementById('connectedUsers');
-      connectedUsersDiv.innerHTML = ''; // Limpiar la lista antes de mostrar los usuarios
+      connectedUsersDiv.innerHTML = '';
 
       const ul = document.createElement('ul');
       users.forEach(user => {
         const li = document.createElement('li');
         li.textContent = user;
-        // Agregar un evento de clic a cada nombre de usuario
         li.addEventListener('click', () => sendGameRequest(user));
         ul.appendChild(li);
       });
@@ -205,9 +221,8 @@
 
     function dibujarTablero(data) {
       let tablero = data.game.table;
-      console.log('bbbbbbbbbb', tablero);
       const tableroDiv = document.getElementById('tablero');
-      tableroDiv.innerHTML = ''; // Limpiar el contenido anterior del tablero
+      tableroDiv.innerHTML = '';
 
       for (let i = 0; i < tablero.length; i++) {
         for (let j = 0; j < tablero[i].length; j++) {
@@ -223,7 +238,6 @@
         }
       }
     }
-
   </script>
 </body>
 

@@ -120,7 +120,7 @@ function handlePrivateMessage(ws, data) {
   const targetUser = Array.from(wss.clients).find(client => client.nickname === to);
   if (targetUser) {
     targetUser.send(JSON.stringify({ type: 'privateMessage', from: ws.nickname, message }));
-    ws.send(JSON.stringify({ type: 'privateMessage', to, message })); // Confirmación para el remitente
+    ws.send(JSON.stringify({ type: 'privateMessage', from: ws.nickname, message })); // Confirmación para el remitente
   } else {
     ws.send(JSON.stringify({ type: 'error', message: `Usuario ${to} no encontrado` }));
   }
@@ -181,17 +181,23 @@ function findUserConnection(username) {
   return targetUser;
 }
 
+// Función para enviar una solicitud de juego al usuario
 function sendGameRequest(user) {
-  const confirmGame = confirm(`¿Quieres jugar al tic-tac-toe con ${user}?`);
-  if (confirmGame) {
-    const userConnection = findUserConnection(user);
-    if (userConnection) {
-      userConnection.send(JSON.stringify({ type: 'gameRequest', from: loggedInUser }));
-    } else {
-      alert(`No se pudo encontrar la conexión para ${user}.`);
+  // Mostrar confirmación solo en respuesta a la interacción del usuario
+  const button = document.getElementById('sendGameRequestButton'); // Suponiendo que hay un botón con este id
+  button.addEventListener('click', function() {
+    const confirmGame = confirm(`¿Quieres jugar al tic-tac-toe con ${user}?`);
+    if (confirmGame) {
+      const userConnection = findUserConnection(user);
+      if (userConnection) {
+        userConnection.send(JSON.stringify({ type: 'gameRequest', from: loggedInUser }));
+      } else {
+        alert(`No se pudo encontrar la conexión para ${user}.`);
+      }
     }
-  }
+  });
 }
+
 
 function createGame(user1, user2) {
   games.push({
